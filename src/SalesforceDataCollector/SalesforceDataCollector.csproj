@@ -21,4 +21,10 @@
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.3.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
