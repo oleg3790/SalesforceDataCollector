@@ -52,7 +52,7 @@ namespace SalesforceDataCollector
             configurator.AddTrigger(opts => opts
                 .ForJob(jobKey)
                 .WithIdentity("Main Trigger")
-                .WithSimpleSchedule(s => s.WithIntervalInSeconds(interval).RepeatForever().Build())
+                .WithSimpleSchedule(s => s.WithIntervalInMinutes(interval).RepeatForever().Build())
             );
 
             return configurator;
