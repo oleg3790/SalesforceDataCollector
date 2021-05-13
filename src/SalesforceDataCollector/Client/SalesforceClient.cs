@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,13 +19,15 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using SalesforceDataCollector.Client.Models;
+using SalesforceDataCollector.Exceptions;
 using SalesforceDataCollector.Models;
 
 namespace SalesforceDataCollector.Client
 {
     public class SalesforceClient : ISalesforceClient
     {
-        private const string _salesforceLoginBaseUrl = "https://login.salesforce.com";
+        private const string SalesforceLoginBaseUrl = "https://login.salesforce.com";
+        private const string AllAccountsQuery = "select id, accountNumber, name, isDeleted from account";
 
         private readonly string _authToken;
         private readonly string _apiVersion;
@@ -48,16 +53,39 @@ namespace SalesforceDataCollector.Client
 
         public async Task<IEnumerable<Account>> GetAllAccountsAsync()
         {
-            try
-            {
-                var sfAuth = Authenticate();
+            var sfAuth = await Authenticate();
 
-            }
-            catch (Exception ex)
+            var queryRequestUri = BuildQueryRequestUri(sfAuth.InstanceUrl, AllAccountsQuery);
+            var requestMessage = BuildRequestMessage(HttpMethod.Get, queryRequestUri, sfAuth);
+            var response = await _client.SendAsync(requestMessage);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError(ex, "Error encountered while trying to get all Salesforce accounts");
+                throw new ApiResponseException(response.StatusCode, responseContent);
             }
+
+            var data = JsonConvert.DeserializeObject<SalesforceDataResponse<Account>>(responseContent);
+            _logger.LogInformation($"{data.TotalSize} Accounts Fetched");
+
+            return data.Records;
         }
+
+        private HttpRequestMessage BuildRequestMessage(HttpMethod method, string requestUri, SalesforceAuthResponse authContent)
+        {
+            var message = new HttpRequestMessage
+            {
+                RequestUri = new Uri(requestUri),
+                Method = method
+            };
+            message.Headers.Authorization = new AuthenticationHeaderValue(authContent.TokenType, authContent.AccessToken);
+
+            return message;
+        }
+
+        private string BuildQueryRequestUri(string instanceUrl, string query) =>
+            $"{instanceUrl}/services/data/v{_apiVersion}/query?q={WebUtility.HtmlEncode(query)}";
 
         /// <summary>
         /// Authenticates this client to the Salesforce API
@@ -66,7 +94,7 @@ namespace SalesforceDataCollector.Client
         {
             var response = await _client.PostAsync
             (
-                $"{_salesforceLoginBaseUrl}/services/oauth2/token",
+                $"{SalesforceLoginBaseUrl}/services/oauth2/token",
                 new FormUrlEncodedContent
                 (
                     new[] {
@@ -80,8 +108,10 @@ namespace SalesforceDataCollector.Client
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Could not authenticate to Salesforce.\nResponse Code: {response.StatusCode}\nResponse Content: {responseContent}");
+                throw new ApiResponseException(response.StatusCode, responseContent, "Could not authenticate to Salesforce");
             }
+
+            _logger.LogInformation($"Authenticated to the Salesforce API successfully!");
 
             return JsonConvert.DeserializeObject<SalesforceAuthResponse>(responseContent);
         }
@@ -103,7 +133,7 @@ namespace SalesforceDataCollector.Client
             var payload = new Dictionary<string, object>
             {
                 { "iss", _config.GetValue<string>("Salesforce:ClientId") ?? throw new Exception("No Salesforce client Id found in config") },
-                { "aud", _salesforceLoginBaseUrl },
+                { "aud", SalesforceLoginBaseUrl },
                 { "sub", _config.GetValue<string>("Salesforce:User") ?? throw new Exception("No Salesforce user found in config") },
                 { "exp", DateTimeOffset.UtcNow.AddMinutes(3).ToUnixTimeSeconds() }
             };

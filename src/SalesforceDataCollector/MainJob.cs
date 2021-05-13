@@ -5,6 +5,7 @@ using SalesforceDataCollector.Client;
 using SalesforceDataCollector.Services;
 using Quartz;
 using System.Linq;
+using System.Diagnostics;
 
 namespace SalesforceDataCollector
 {
@@ -12,13 +13,13 @@ namespace SalesforceDataCollector
     {
         private readonly ILogger _logger;
         private readonly ISalesforceClient _salesforceClient;
-        private readonly AccountService _accountService;
+        private readonly IAccountService _accountService;
 
         public MainJob
         (
             ILogger<MainJob> logger,
             ISalesforceClient salesforceClient,
-            AccountService accountService
+            IAccountService accountService
         )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -28,11 +29,26 @@ namespace SalesforceDataCollector
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var accounts = await _salesforceClient.GetAllAccountsAsync();
+            try
+            {
+                var stopwatch = new Stopwatch();
+                
+                _logger.LogInformation("Starting API Data Collect");
+                stopwatch.Start();
 
-            _logger.LogInformation($"Obtained {accounts.Count()} accounts");
+                var accounts = await _salesforceClient.GetAllAccountsAsync();
+                _logger.LogInformation($"API data collected in {stopwatch.ElapsedTicks / Stopwatch.Frequency} seconds");
 
-            await _accountService.SaveAccountsAsync(accounts);
+                _logger.LogInformation("Starting Data Sync");
+                stopwatch.Restart();
+
+                await _accountService.SaveAccountsAsync(accounts);
+                _logger.LogInformation($"Data synced in {stopwatch.ElapsedTicks / Stopwatch.Frequency} seconds");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error encountered while running job");
+            }
         }
     }
 }
