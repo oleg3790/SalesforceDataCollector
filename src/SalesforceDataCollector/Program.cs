@@ -16,7 +16,7 @@ namespace SalesforceDataCollector
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config.AddJsonFile("settings.json", true);
+                    config.AddJsonFile("devsettings.json", true);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
