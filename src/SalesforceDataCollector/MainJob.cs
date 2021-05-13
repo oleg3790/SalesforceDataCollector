@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using SalesforceDataCollector.Client;
 using SalesforceDataCollector.Services;
 using Quartz;
-using System.Linq;
 using System.Diagnostics;
 
 namespace SalesforceDataCollector
