@@ -6,6 +6,6 @@ namespace SalesforceDataCollector.Client
 {
     public interface ISalesforceClient
     {
-        Task<IEnumerable<Account>> GetAccountsAsync();
+        Task<IEnumerable<Account>> GetAllAccountsAsync();
     }
 }

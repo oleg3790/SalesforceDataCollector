@@ -7,6 +7,7 @@ using SalesforceDataCollector.Client;
 using SalesforceDataCollector.Data;
 using SalesforceDataCollector.Services;
 using Quartz;
+using System.Net.Http;
 
 namespace SalesforceDataCollector
 {
@@ -61,6 +62,7 @@ namespace SalesforceDataCollector
         public static IServiceCollection RegisterAppServices(this IServiceCollection services)
         {
             return services
+                .AddSingleton<HttpClient>()
                 .AddSingleton<ISalesforceClient, SalesforceClient>()
                 .AddSingleton<IAccountService, AccountService>()
             ;

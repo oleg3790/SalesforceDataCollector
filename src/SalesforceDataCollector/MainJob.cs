@@ -28,7 +28,7 @@ namespace SalesforceDataCollector
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var accounts = await _salesforceClient.GetAccountsAsync();
+            var accounts = await _salesforceClient.GetAllAccountsAsync();
 
             _logger.LogInformation($"Obtained {accounts.Count()} accounts");
 
