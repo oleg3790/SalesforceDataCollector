@@ -25,6 +25,7 @@ namespace SalesforceDataCollector.Client
         private const string _salesforceLoginBaseUrl = "https://login.salesforce.com";
 
         private readonly string _authToken;
+        private readonly string _apiVersion;
 
         private readonly ILogger<SalesforceClient> _logger;
         private readonly HttpClient _client;
@@ -42,6 +43,7 @@ namespace SalesforceDataCollector.Client
             _config = config ?? throw new ArgumentNullException(nameof(config));
 
             _authToken = GenerateAuthJWTToken();
+            _apiVersion = config.GetValue<string>("Salesforce:ApiVersion") ?? "51.0";
         }
 
         public async Task<IEnumerable<Account>> GetAllAccountsAsync()
@@ -100,9 +102,9 @@ namespace SalesforceDataCollector.Client
 
             var payload = new Dictionary<string, object>
             {
-                { "iss", _config.GetValue<string>("Salesforce:ClientId") },
+                { "iss", _config.GetValue<string>("Salesforce:ClientId") ?? throw new Exception("No Salesforce client Id found in config") },
                 { "aud", _salesforceLoginBaseUrl },
-                { "sub", _config.GetValue<string>("Salesforce:User") },
+                { "sub", _config.GetValue<string>("Salesforce:User") ?? throw new Exception("No Salesforce user found in config") },
                 { "exp", DateTimeOffset.UtcNow.AddMinutes(3).ToUnixTimeSeconds() }
             };
 
