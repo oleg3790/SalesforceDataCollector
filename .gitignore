@@ -335,3 +335,8 @@ ASALocalRun/
 
 # Dev settings file
 devsettings.json
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*

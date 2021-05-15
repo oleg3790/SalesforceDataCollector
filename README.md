@@ -5,6 +5,9 @@ Use the Terraform found in the `infrastructure` folder to spin up the DB for thi
  
 ## Requirements
 
+#### Database
+You will need a database to run this app as it will drop all Salesforce record fetched into it. If you plan on using AWS RDS, this repo contains Terraform in the `infrastructure/database` folder that you can use to spin one up. 
+
 #### Salesforce Connected App
 1. To authorize your app to the Salesforce API, you will need to generate a digital certificate that you will upload to the Salesforce connected app and sign the JWT using the certificates private key.  
     1. [Docs to Generate Certificate](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_key_and_cert.htm)
