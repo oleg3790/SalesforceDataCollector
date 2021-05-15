@@ -64,7 +64,7 @@ namespace SalesforceDataCollector
             return services
                 .AddSingleton<HttpClient>()
                 .AddSingleton<ISalesforceClient, SalesforceClient>()
-                .AddSingleton<IAccountService, AccountService>()
+                .AddScoped<IAccountService, AccountService>()
             ;
         }
     }

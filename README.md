@@ -5,8 +5,8 @@ Use the Terraform found in the `infrastructure` folder to spin up the DB for thi
  
 ## Requirements
 
-#### Database
-You will need a database to run this app as it will drop all Salesforce record fetched into it. If you plan on using AWS RDS, this repo contains Terraform in the `infrastructure/database` folder that you can use to spin one up. 
+#### Database Server
+You will need a database to run this app as it will drop all Salesforce record fetched into it. If you plan on using AWS RDS, this repo contains Terraform in the `infrastructure/database` folder that you can use to spin up an instance. 
 
 #### Salesforce Connected App
 1. To authorize your app to the Salesforce API, you will need to generate a digital certificate that you will upload to the Salesforce connected app and sign the JWT using the certificates private key.  
@@ -32,3 +32,6 @@ For this app to work, is requires the following configuration variables:
 - `Salesforce:ClientId` - Salesforce connected app client Id
 - `Salesforce:User` - Salesforce username
 - `Salesforce:CertPrivateKey` - Salesforce connected app OAuth certificate private key encoded as a base 64 string (you can use an online tool to base 64 encode the private key, or run `base64 <privatekey>` from a bash shell)
+
+## Initialize Database via Entity Framework
+All configuration to spin up a database is in `src/SalesforceDataCollector/Migrations`. When dealing with a new database, just run the `Update-Database` from the Package Manager Console to apply the migrations to a new database on your server.
