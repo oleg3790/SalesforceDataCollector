@@ -8,6 +8,7 @@ using SalesforceDataCollector.Data;
 using SalesforceDataCollector.Services;
 using Quartz;
 using System.Net.Http;
+using Microsoft.Extensions.Logging;
 
 namespace SalesforceDataCollector
 {
@@ -18,6 +19,11 @@ namespace SalesforceDataCollector
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     config.AddJsonFile("devsettings.json", true);
+                })
+                .ConfigureLogging((hostConfig, logging) => {
+                    logging.ClearProviders();
+                    logging.AddLog4Net("log4net.config");
+                    logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
