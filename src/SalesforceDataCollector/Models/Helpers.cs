@@ -10,11 +10,9 @@ namespace SalesforceDataCollector.Models
         {
             return new AccountDataModel
             {
-                Id = Guid.NewGuid(),
+                Id = account.Id,
                 Created = DateTime.Now,
-                LastModified = DateTime.Now,
-                SalesforceLastModified = account.LastModifiedDate,
-                SalesforceId = account.Id,
+                LastModified = account.LastModifiedDate,
                 AccountNumber = account.AccountNumber,
                 Name = account.Name,
                 IsDeleted = account.IsDeleted

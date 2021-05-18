@@ -15,17 +15,14 @@ namespace SalesforceDataCollector.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasPostgresExtension("uuid-ossp")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
             modelBuilder.Entity("SalesforceDataCollector.Data.Models.AccountDataModel", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("uuid_generate_v4()");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("AccountNumber")
                         .HasColumnType("text");
@@ -39,14 +36,9 @@ namespace SalesforceDataCollector.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastModified")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp without time zone")
-                        .HasDefaultValueSql("now()");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("SalesforceId")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
