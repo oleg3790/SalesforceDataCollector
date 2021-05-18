@@ -27,7 +27,7 @@ namespace SalesforceDataCollector.Client
     public class SalesforceClient : ISalesforceClient
     {
         private const string SalesforceLoginBaseUrl = "https://login.salesforce.com";
-        private const string AllAccountsQuery = "select id, accountNumber, name, isDeleted from account";
+        private const string AllAccountsQuery = "select id, accountNumber, name, isDeleted, lastModifiedDate from account";
 
         private readonly string _authToken;
         private readonly string _apiVersion;
