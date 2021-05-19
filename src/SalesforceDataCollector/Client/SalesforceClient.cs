@@ -29,7 +29,6 @@ namespace SalesforceDataCollector.Client
         private const string SalesforceLoginBaseUrl = "https://login.salesforce.com";
         private const string AllAccountsQuery = "select id, accountNumber, name, isDeleted, lastModifiedDate from account";
 
-        private readonly string _authToken;
         private readonly string _apiVersion;
 
         private readonly ILogger<SalesforceClient> _logger;
@@ -47,7 +46,6 @@ namespace SalesforceDataCollector.Client
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _config = config ?? throw new ArgumentNullException(nameof(config));
 
-            _authToken = GenerateAuthJWTToken();
             _apiVersion = config.GetValue<string>("Salesforce:ApiVersion") ?? "51.0";
         }
 
@@ -92,6 +90,9 @@ namespace SalesforceDataCollector.Client
         /// </summary>
         private async Task<SalesforceAuthResponse> Authenticate()
         {
+            var authToken = GenerateAuthJWTToken();
+            _logger.LogDebug($"Auth Token: {authToken}");
+
             var response = await _client.PostAsync
             (
                 $"{SalesforceLoginBaseUrl}/services/oauth2/token",
@@ -99,7 +100,7 @@ namespace SalesforceDataCollector.Client
                 (
                     new[] {
                         new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"),
-                        new KeyValuePair<string, string>("assertion", _authToken)
+                        new KeyValuePair<string, string>("assertion", authToken)
                     }
                 )
             );
