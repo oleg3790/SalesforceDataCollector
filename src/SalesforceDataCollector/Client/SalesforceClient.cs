@@ -52,6 +52,7 @@ namespace SalesforceDataCollector.Client
         public async Task<IEnumerable<Account>> GetAllAccountsAsync()
         {
             var sfAuth = await Authenticate();
+            _logger.LogDebug($"Authentication Response: {JsonConvert.SerializeObject(sfAuth)}");
 
             var queryRequestUri = BuildQueryRequestUri(sfAuth.InstanceUrl, AllAccountsQuery);
             var requestMessage = BuildRequestMessage(HttpMethod.Get, queryRequestUri, sfAuth);
@@ -91,7 +92,7 @@ namespace SalesforceDataCollector.Client
         private async Task<SalesforceAuthResponse> Authenticate()
         {
             var authToken = GenerateAuthJWTToken();
-            _logger.LogDebug($"Auth Token: {authToken}");
+            _logger.LogTrace($"Auth Token: {authToken}");
 
             var response = await _client.PostAsync
             (
