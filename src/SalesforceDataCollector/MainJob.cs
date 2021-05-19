@@ -32,7 +32,7 @@ namespace SalesforceDataCollector
             {
                 var stopwatch = new Stopwatch();
                 
-                _logger.LogInformation("\n******* Starting API Data Collect *******");
+                _logger.LogInformation("******* Starting API Data Collect *******");
                 stopwatch.Start();
 
                 var accounts = await _salesforceClient.GetAllAccountsAsync();
@@ -42,7 +42,7 @@ namespace SalesforceDataCollector
                 stopwatch.Restart();
 
                 await _accountService.SaveAccountsAsync(accounts);
-                _logger.LogInformation($"Data synced in {stopwatch.Elapsed}");
+                _logger.LogInformation($"Data synced in {stopwatch.Elapsed}\n");
             }
             catch (Exception ex)
             {
