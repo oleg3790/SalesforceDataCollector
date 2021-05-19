@@ -1,5 +1,5 @@
 ## Overview
-This app demonstrates how to pull data from Salesforce via REST API and drop it into an AWS RDS database on a schedule.
+This app demonstrates how to pull data from Salesforce via REST API and drop it into an AWS RDS database on a schedule. It is pre-configured to pull Salesforce Account objects.
 
 Use the Terraform found in the `infrastructure` folder to spin up the DB for this app, and deploy this app as a Docker container to AWS ECS.
  
@@ -35,3 +35,6 @@ For this app to work, is requires the following configuration variables:
 
 ## Initialize Database via Entity Framework
 All configuration to spin up a database is in `src/SalesforceDataCollector/Migrations`. When dealing with a new database, just run the `Update-Database` from the Package Manager Console to apply the migrations to a new database on your server.
+
+## Mocking Salesforce Data
+During development, if you need to quickly test this service against a large data-set, you can use mockaroo.com to create a randomized CSV file and then use dataloader.io or the [Salesforce workbench](https://workbench.developerforce.com/) to load all of the data at once into your developer account.
