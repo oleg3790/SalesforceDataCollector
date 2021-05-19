@@ -22,8 +22,7 @@ namespace SalesforceDataCollector
                 })
                 .ConfigureLogging((hostConfig, logging) => {
                     logging.ClearProviders();
-                    logging.AddLog4Net("log4net.config");
-                    logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                    logging.AddSimpleConsole();
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
