@@ -41,7 +41,7 @@ namespace SalesforceDataCollector
                 _logger.LogInformation("Starting Data Sync");
                 stopwatch.Restart();
 
-                await _accountService.SaveAccountsAsync(accounts);
+                await _accountService.SyncAccountsAsync(accounts);
                 _logger.LogInformation($"Data synced in {stopwatch.Elapsed}\n");
             }
             catch (Exception ex)

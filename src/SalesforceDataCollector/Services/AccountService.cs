@@ -24,7 +24,7 @@ namespace SalesforceDataCollector.Services
             _accountContext = accountContext ?? throw new ArgumentNullException(nameof(accountContext));
         }
 
-        public async Task SaveAccountsAsync(IEnumerable<Account> accounts)
+        public async Task SyncAccountsAsync(IEnumerable<Account> accounts)
         {
             // Add new accounts
             var newAccounts = accounts
