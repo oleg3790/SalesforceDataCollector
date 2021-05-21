@@ -6,6 +6,7 @@ namespace SalesforceDataCollector.Client.Models
     {
         public int TotalSize { get; set; }
         public bool Done { get; set; }
+        public string NextRecordsUrl { get; set; }
         public IEnumerable<T> Records { get; set; }
     }
 }

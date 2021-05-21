@@ -27,7 +27,7 @@ namespace SalesforceDataCollector.Client
     public class SalesforceClient : ISalesforceClient
     {
         private const string SalesforceLoginBaseUrl = "https://login.salesforce.com";
-        private const string AllAccountsQuery = "select id, accountNumber, name, isDeleted, lastModifiedDate from account";
+        
 
         private readonly string _apiVersion;
 
@@ -49,26 +49,26 @@ namespace SalesforceDataCollector.Client
             _apiVersion = config.GetValue<string>("Salesforce:ApiVersion") ?? "51.0";
         }
 
-        public async Task<IEnumerable<Account>> GetAllAccountsAsync()
+        /// <inheritdoc/>
+        public async Task<SalesforceDataResponse<T>> QueryData<T>(string query) =>
+            await GetData<T>($"/services/data/v{_apiVersion}/query?q={WebUtility.HtmlEncode(query)}");
+
+        /// <inheritdoc/>
+        public async Task<SalesforceDataResponse<T>> GetData<T>(string relativeUri)
         {
             var sfAuth = await Authenticate();
+
             _logger.LogDebug($"Authentication Response: {JsonConvert.SerializeObject(sfAuth)}");
 
-            var queryRequestUri = BuildQueryRequestUri(sfAuth.InstanceUrl, AllAccountsQuery);
+            var queryRequestUri = $"{sfAuth.InstanceUrl}{relativeUri}";
             var requestMessage = BuildRequestMessage(HttpMethod.Get, queryRequestUri, sfAuth);
             var response = await _client.SendAsync(requestMessage);
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var data = await ParseResponse<SalesforceDataResponse<T>>(response);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new ApiResponseException(response.StatusCode, responseContent);
-            }
-
-            var data = JsonConvert.DeserializeObject<SalesforceDataResponse<Account>>(responseContent);
             _logger.LogInformation($"{data.Records.Count()} of {data.TotalSize} Accounts Fetched");
 
-            return data.Records;
+            return data;
         }
 
         private HttpRequestMessage BuildRequestMessage(HttpMethod method, string requestUri, SalesforceAuthResponse authContent)
@@ -83,8 +83,19 @@ namespace SalesforceDataCollector.Client
             return message;
         }
 
-        private string BuildQueryRequestUri(string instanceUrl, string query) =>
-            $"{instanceUrl}/services/data/v{_apiVersion}/query?q={WebUtility.HtmlEncode(query)}";
+        private async Task<T> ParseResponse<T>(HttpResponseMessage response, string apiResponseErrorMessage = null)
+        {
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new ApiResponseException(response.StatusCode, responseContent, apiResponseErrorMessage);
+            }
+
+            return JsonConvert.DeserializeObject<T>(responseContent);
+        }
+
+        #region Authentication
 
         /// <summary>
         /// Authenticates this client to the Salesforce API
@@ -92,6 +103,7 @@ namespace SalesforceDataCollector.Client
         private async Task<SalesforceAuthResponse> Authenticate()
         {
             var authToken = GenerateAuthJWTToken();
+
             _logger.LogTrace($"Auth Token: {authToken}");
 
             var response = await _client.PostAsync
@@ -106,16 +118,11 @@ namespace SalesforceDataCollector.Client
                 )
             );
 
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new ApiResponseException(response.StatusCode, responseContent, "Could not authenticate to Salesforce");
-            }
+            var authData = await ParseResponse<SalesforceAuthResponse>(response, "Could not authenticate to Salesforce");
 
             _logger.LogInformation($"Authenticated to the Salesforce API successfully!");
 
-            return JsonConvert.DeserializeObject<SalesforceAuthResponse>(responseContent);
+            return authData;
         }
 
         private string GenerateAuthJWTToken()
@@ -161,15 +168,14 @@ namespace SalesforceDataCollector.Client
         private RSAParameters GetRsaParameters(string rsaPrivateKey)
         {
             var byteArray = Encoding.ASCII.GetBytes(rsaPrivateKey);
-            using (var ms = new MemoryStream(byteArray))
-            {
-                using (var sr = new StreamReader(ms))
-                {
-                    var pemReader = new PemReader(sr);
-                    var keyPair = pemReader.ReadObject() as AsymmetricCipherKeyPair;
-                    return DotNetUtilities.ToRSAParameters(keyPair.Private as RsaPrivateCrtKeyParameters);
-                }
-            }
+            using var ms = new MemoryStream(byteArray);
+            using var sr = new StreamReader(ms);
+
+            var pemReader = new PemReader(sr);
+            var keyPair = pemReader.ReadObject() as AsymmetricCipherKeyPair;
+            return DotNetUtilities.ToRSAParameters(keyPair.Private as RsaPrivateCrtKeyParameters);
         }
+
+        #endregion
     }
 }
