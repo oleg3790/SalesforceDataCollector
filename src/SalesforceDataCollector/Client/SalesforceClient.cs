@@ -66,7 +66,7 @@ namespace SalesforceDataCollector.Client
             }
 
             var data = JsonConvert.DeserializeObject<SalesforceDataResponse<Account>>(responseContent);
-            _logger.LogInformation($"{data.TotalSize} Accounts Fetched");
+            _logger.LogInformation($"{data.Records.Count()} of {data.TotalSize} Accounts Fetched");
 
             return data.Records;
         }
