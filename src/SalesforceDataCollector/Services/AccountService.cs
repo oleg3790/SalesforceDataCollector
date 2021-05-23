@@ -43,12 +43,12 @@ namespace SalesforceDataCollector.Services
 
             foreach (var modifiedAccount in modifiedAccounts)
             {
-                var existingAccunt = await _accountContext.Accounts.FindAsync(modifiedAccount.Id);
+                var existingAccount = await _accountContext.Accounts.FindAsync(modifiedAccount.Id);
 
-                existingAccunt.LastModified = modifiedAccount.LastModifiedDate;
-                existingAccunt.Name = modifiedAccount.Name;
-                existingAccunt.AccountNumber = modifiedAccount.AccountNumber;
-                existingAccunt.IsDeleted = modifiedAccount.IsDeleted;
+                existingAccount.LastModified = modifiedAccount.LastModifiedDate;
+                existingAccount.Name = modifiedAccount.Name;
+                existingAccount.AccountNumber = modifiedAccount.AccountNumber;
+                existingAccount.IsDeleted = modifiedAccount.IsDeleted;
             }
 
             _logger.LogInformation($"Updated {modifiedAccounts.Count()} accounts");
