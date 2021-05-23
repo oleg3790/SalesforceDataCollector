@@ -66,8 +66,6 @@ namespace SalesforceDataCollector.Client
 
             var data = await ParseResponse<SalesforceDataResponse<T>>(response);
 
-            _logger.LogInformation($"{data.Records.Count()} of {data.TotalSize} Accounts Fetched");
-
             return data;
         }
 

@@ -6,6 +6,10 @@ namespace SalesforceDataCollector.Services
 {
     public interface IAccountService
     {
-        Task SyncAccountsAsync(IEnumerable<Account> accounts);
+        Task AddNewAccountsAsync(IEnumerable<Account> accounts);
+
+        Task UpdateModifiedAccountsAsync(IEnumerable<Account> accounts);
+
+        Task RemoveMissingAccountsAsync(IEnumerable<Account> accounts);
     }
 }

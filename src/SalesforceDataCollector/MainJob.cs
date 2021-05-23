@@ -1,29 +1,24 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using SalesforceDataCollector.Client;
-using SalesforceDataCollector.Services;
 using Quartz;
-using System.Diagnostics;
 
 namespace SalesforceDataCollector
 {
     public class MainJob : IJob
     {
         private readonly ILogger _logger;
-        private readonly ISalesforceClient _salesforceClient;
-        private readonly IAccountService _accountService;
+        private readonly ISynchronizer _synchronizer;
 
         public MainJob
         (
             ILogger<MainJob> logger,
-            ISalesforceClient salesforceClient,
-            IAccountService accountService
+            ISynchronizer synchronizer
         )
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _salesforceClient = salesforceClient ?? throw new ArgumentNullException(nameof(salesforceClient));
-            _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+            _synchronizer = synchronizer ?? throw new ArgumentNullException(nameof(synchronizer));
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -32,16 +27,11 @@ namespace SalesforceDataCollector
             {
                 var stopwatch = new Stopwatch();
                 
-                _logger.LogInformation("******* Starting API Data Collect *******");
+                _logger.LogInformation("******* Starting Accounts Sync *******");
                 stopwatch.Start();
 
-                var accounts = await _salesforceClient.GetAllAccountsAsync();
-                _logger.LogInformation($"API data collected in {stopwatch.Elapsed}");
+                await _synchronizer.SyncAccounts();
 
-                _logger.LogInformation("Starting Data Sync");
-                stopwatch.Restart();
-
-                await _accountService.SyncAccountsAsync(accounts);
                 _logger.LogInformation($"Data synced in {stopwatch.Elapsed}\n");
             }
             catch (Exception ex)

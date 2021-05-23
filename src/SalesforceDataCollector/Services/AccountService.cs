@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using SalesforceDataCollector.Data;
-using SalesforceDataCollector.Data.Models;
-using SalesforceDataCollector.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using SalesforceDataCollector.Data;
+using SalesforceDataCollector.Models;
 
 namespace SalesforceDataCollector.Services
 {
@@ -24,38 +23,48 @@ namespace SalesforceDataCollector.Services
             _accountContext = accountContext ?? throw new ArgumentNullException(nameof(accountContext));
         }
 
-        public async Task SyncAccountsAsync(IEnumerable<Account> accounts)
+        public async Task AddNewAccountsAsync(IEnumerable<Account> accounts)
         {
             // Add new accounts
             var newAccounts = accounts
                 .Where(a => !_accountContext.Accounts.Any(ea => ea.Id == a.Id ));
-
-            _logger.LogInformation($"Adding {newAccounts.Count()} new accounts");
+            
             await _accountContext.AddRangeAsync(newAccounts.Select(na => na.ToDataModel()));
+            _logger.LogInformation($"Added {newAccounts.Count()} new accounts");
 
-            // Delete missing accounts
+            await _accountContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateModifiedAccountsAsync(IEnumerable<Account> accounts)
+        {
+            // Update modified accounts
+            var modifiedAccounts = accounts
+                .Where(a => _accountContext.Accounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified));
+
+            foreach (var modifiedAccount in modifiedAccounts)
+            {
+                var existingAccunt = await _accountContext.Accounts.FindAsync(modifiedAccount.Id);
+
+                existingAccunt.LastModified = modifiedAccount.LastModifiedDate;
+                existingAccunt.Name = modifiedAccount.Name;
+                existingAccunt.AccountNumber = modifiedAccount.AccountNumber;
+                existingAccunt.IsDeleted = modifiedAccount.IsDeleted;
+            }
+
+            _logger.LogInformation($"Updated {modifiedAccounts.Count()} accounts");
+
+            await _accountContext.SaveChangesAsync();
+        }
+
+        public async Task RemoveMissingAccountsAsync(IEnumerable<Account> accounts)
+        {
             var nonExistingAccounts = _accountContext.Accounts
                 .AsEnumerable()
                 .Where(ea => !accounts.Any(a => a.Id == ea.Id));
 
-            _logger.LogInformation($"Removing {nonExistingAccounts.Count()} accounts");
             _accountContext.RemoveRange(nonExistingAccounts);
 
-            // Update changed accounts
-            var changedAccounts = accounts
-                .Where(a => _accountContext.Accounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified));
-
-            _logger.LogInformation($"Updating {changedAccounts.Count()} accounts");
-
-            foreach (var changedAccount in changedAccounts)
-            {
-                var existingAccunt = await _accountContext.Accounts.FindAsync(changedAccount.Id);
-
-                existingAccunt.LastModified = changedAccount.LastModifiedDate;
-                existingAccunt.Name = changedAccount.Name;
-                existingAccunt.AccountNumber = changedAccount.AccountNumber;
-                existingAccunt.IsDeleted = changedAccount.IsDeleted;
-            }
+            _logger.LogInformation($"Removed {nonExistingAccounts.Count()} accounts");
 
             await _accountContext.SaveChangesAsync();
         }

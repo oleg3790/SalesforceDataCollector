@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +8,6 @@ using SalesforceDataCollector.Client;
 using SalesforceDataCollector.Data;
 using SalesforceDataCollector.Services;
 using Quartz;
-using System.Net.Http;
 using Microsoft.Extensions.Logging;
 
 namespace SalesforceDataCollector
@@ -69,6 +69,7 @@ namespace SalesforceDataCollector
             return services
                 .AddSingleton<HttpClient>()
                 .AddSingleton<ISalesforceClient, SalesforceClient>()
+                .AddSingleton<ISynchronizer, Synchronizer>()
                 .AddScoped<IAccountService, AccountService>()
             ;
         }
