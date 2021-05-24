@@ -37,11 +37,11 @@ namespace SalesforceDataCollector
             var totalRecordsCollected = 0;
             var accountsToRemove = new List<Account>();
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             while (isBusy)
             {
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 var response = string.IsNullOrWhiteSpace(nextRecordSetUrl) 
                     ? await _salesforceClient.QueryData<Account>(AllAccountsQuery)
                     : await _salesforceClient.GetData<Account>(nextRecordSetUrl);
