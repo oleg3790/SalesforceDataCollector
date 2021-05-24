@@ -51,7 +51,7 @@ namespace SalesforceDataCollector.Services
                 existingAccount.IsDeleted = modifiedAccount.IsDeleted;
             }
 
-            _logger.LogInformation($"Updated {modifiedAccounts.Count()} accounts");
+            _logger.LogInformation($"Updated {modifiedAccounts.Count} accounts");
 
             await _accountContext.SaveChangesAsync();
         }
@@ -65,7 +65,7 @@ namespace SalesforceDataCollector.Services
 
             _accountContext.RemoveRange(nonExistingAccounts);
 
-            _logger.LogInformation($"Removed {nonExistingAccounts.Count()} accounts");
+            _logger.LogInformation($"Removed {nonExistingAccounts.Count} accounts");
 
             await _accountContext.SaveChangesAsync();
         }
