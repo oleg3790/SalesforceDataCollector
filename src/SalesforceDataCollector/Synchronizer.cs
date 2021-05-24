@@ -35,7 +35,11 @@ namespace SalesforceDataCollector
             var isBusy = true;
             string nextRecordSetUrl = null;
             var totalRecordsCollected = 0;
-            var accountsToRemove = new List<Account>();
+            var totalRecordsAdded = 0;
+            var totalRecordsUpdated = 0;
+            var totalRecordsRemoved = 0;
+
+            var accountsCollected = new List<Account>();
 
             while (isBusy)
             {
@@ -47,18 +51,20 @@ namespace SalesforceDataCollector
                     : await _salesforceClient.GetData<Account>(nextRecordSetUrl);
 
                 totalRecordsCollected += response.Records.Count();
-                accountsToRemove.AddRange(response.Records);
+                accountsCollected.AddRange(response.Records);
 
                 _logger.LogInformation($"{totalRecordsCollected} of {response.TotalSize} accounts collected in {stopwatch.Elapsed}");
 
                 nextRecordSetUrl = response.NextRecordsUrl;
                 isBusy = !response.Done && !string.IsNullOrWhiteSpace(response.NextRecordsUrl);
 
-                await _accountService.AddNewAccountsAsync(response.Records);
-                await _accountService.UpdateModifiedAccountsAsync(response.Records);
+                totalRecordsAdded += await _accountService.AddNewAccountsAsync(response.Records);
+                totalRecordsUpdated += await _accountService.UpdateModifiedAccountsAsync(response.Records);
             }
 
-            await _accountService.RemoveMissingAccountsAsync(accountsToRemove);
+            totalRecordsRemoved += await _accountService.RemoveMissingAccountsAsync(accountsCollected);
+
+            _logger.LogInformation($"Totals: {totalRecordsAdded} accounts added, {totalRecordsUpdated} accounts updated, {totalRecordsRemoved} accounts removed");
         }
     }
 }

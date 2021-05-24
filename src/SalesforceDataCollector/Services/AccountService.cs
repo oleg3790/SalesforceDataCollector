@@ -24,7 +24,7 @@ namespace SalesforceDataCollector.Services
             _accountContext = accountContext ?? throw new ArgumentNullException(nameof(accountContext));
         }
 
-        public async Task AddNewAccountsAsync(IEnumerable<Account> accounts)
+        public async Task<int> AddNewAccountsAsync(IEnumerable<Account> accounts)
         {
             var existingAccounts = GetAllDbAccounts();
 
@@ -33,12 +33,15 @@ namespace SalesforceDataCollector.Services
                 .ToList();
 
             await _accountContext.AddRangeAsync(newAccounts.Select(na => na.ToDataModel()));
-            _logger.LogInformation($"Added {newAccounts.Count} new accounts");
+
+            _logger.LogDebug($"Added {newAccounts.Count} new accounts");
 
             await _accountContext.SaveChangesAsync();
+
+            return newAccounts.Count;
         }
 
-        public async Task UpdateModifiedAccountsAsync(IEnumerable<Account> accounts)
+        public async Task<int> UpdateModifiedAccountsAsync(IEnumerable<Account> accounts)
         {
             var existingAccounts = GetAllDbAccounts();
 
@@ -56,12 +59,14 @@ namespace SalesforceDataCollector.Services
                 existingAccount.IsDeleted = modifiedAccount.IsDeleted;
             }
 
-            _logger.LogInformation($"Updated {modifiedAccounts.Count} accounts");
+            _logger.LogDebug($"Updated {modifiedAccounts.Count} accounts");
 
             await _accountContext.SaveChangesAsync();
+
+            return modifiedAccounts.Count;
         }
 
-        public async Task RemoveMissingAccountsAsync(IEnumerable<Account> accounts)
+        public async Task<int> RemoveMissingAccountsAsync(IEnumerable<Account> accounts)
         {
             var existingAccounts = GetAllDbAccounts();
 
@@ -71,9 +76,11 @@ namespace SalesforceDataCollector.Services
 
             _accountContext.RemoveRange(nonExistingAccounts);
 
-            _logger.LogInformation($"Removed {nonExistingAccounts.Count} accounts");
+            _logger.LogDebug($"Removed {nonExistingAccounts.Count} accounts");
 
             await _accountContext.SaveChangesAsync();
+
+            return nonExistingAccounts.Count;
         }
 
         private IList<AccountDataModel> GetAllDbAccounts() =>

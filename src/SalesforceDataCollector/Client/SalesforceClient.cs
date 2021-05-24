@@ -118,7 +118,7 @@ namespace SalesforceDataCollector.Client
 
             var authData = await ParseResponse<SalesforceAuthResponse>(response, "Could not authenticate to Salesforce");
 
-            _logger.LogInformation($"Authenticated to the Salesforce API successfully!");
+            _logger.LogDebug($"Authenticated to the Salesforce API successfully!");
 
             return authData;
         }
