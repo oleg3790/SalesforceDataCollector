@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SalesforceDataCollector.Data;
+using SalesforceDataCollector.Data.Models;
 using SalesforceDataCollector.Models;
 
 namespace SalesforceDataCollector.Services
@@ -25,9 +26,11 @@ namespace SalesforceDataCollector.Services
 
         public async Task AddNewAccountsAsync(IEnumerable<Account> accounts)
         {
+            var existingAccounts = GetAllDbAccounts();
+
             var newAccounts = accounts
-                .Where(a => !_accountContext.Accounts.Any(ea => ea.Id == a.Id ))
-                .ToList(); // Materialize collection
+                .Where(a => !existingAccounts.Any(ea => ea.Id == a.Id))
+                .ToList();
 
             await _accountContext.AddRangeAsync(newAccounts.Select(na => na.ToDataModel()));
             _logger.LogInformation($"Added {newAccounts.Count} new accounts");
@@ -37,9 +40,11 @@ namespace SalesforceDataCollector.Services
 
         public async Task UpdateModifiedAccountsAsync(IEnumerable<Account> accounts)
         {
+            var existingAccounts = GetAllDbAccounts();
+
             var modifiedAccounts = accounts
-                .Where(a => _accountContext.Accounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified))
-                .ToList(); // Materialize collection
+                .Where(a => existingAccounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified))
+                .ToList();
 
             foreach (var modifiedAccount in modifiedAccounts)
             {
@@ -58,10 +63,11 @@ namespace SalesforceDataCollector.Services
 
         public async Task RemoveMissingAccountsAsync(IEnumerable<Account> accounts)
         {
-            var nonExistingAccounts = _accountContext.Accounts
-                .AsEnumerable()
+            var existingAccounts = GetAllDbAccounts();
+
+            var nonExistingAccounts = existingAccounts
                 .Where(ea => !accounts.Any(a => a.Id == ea.Id))
-                .ToList(); // Materialize collection
+                .ToList();
 
             _accountContext.RemoveRange(nonExistingAccounts);
 
@@ -69,5 +75,8 @@ namespace SalesforceDataCollector.Services
 
             await _accountContext.SaveChangesAsync();
         }
+
+        private IList<AccountDataModel> GetAllDbAccounts() =>
+            _accountContext.Accounts.ToList(); // Materialize the collection of ids so that EF doesn't make a DB call to check each incoming account
     }
 }
