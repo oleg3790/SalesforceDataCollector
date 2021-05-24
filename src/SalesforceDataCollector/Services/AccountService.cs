@@ -25,21 +25,21 @@ namespace SalesforceDataCollector.Services
 
         public async Task AddNewAccountsAsync(IEnumerable<Account> accounts)
         {
-            // Add new accounts
             var newAccounts = accounts
-                .Where(a => !_accountContext.Accounts.Any(ea => ea.Id == a.Id ));
-            
+                .Where(a => !_accountContext.Accounts.Any(ea => ea.Id == a.Id ))
+                .ToList(); // Materialize collection
+
             await _accountContext.AddRangeAsync(newAccounts.Select(na => na.ToDataModel()));
-            _logger.LogInformation($"Added {newAccounts.Count()} new accounts");
+            _logger.LogInformation($"Added {newAccounts.Count} new accounts");
 
             await _accountContext.SaveChangesAsync();
         }
 
         public async Task UpdateModifiedAccountsAsync(IEnumerable<Account> accounts)
         {
-            // Update modified accounts
             var modifiedAccounts = accounts
-                .Where(a => _accountContext.Accounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified));
+                .Where(a => _accountContext.Accounts.Any(ea => a.Id == ea.Id && a.LastModifiedDate > ea.LastModified))
+                .ToList(); // Materialize collection
 
             foreach (var modifiedAccount in modifiedAccounts)
             {
@@ -60,7 +60,8 @@ namespace SalesforceDataCollector.Services
         {
             var nonExistingAccounts = _accountContext.Accounts
                 .AsEnumerable()
-                .Where(ea => !accounts.Any(a => a.Id == ea.Id));
+                .Where(ea => !accounts.Any(a => a.Id == ea.Id))
+                .ToList(); // Materialize collection
 
             _accountContext.RemoveRange(nonExistingAccounts);
 
