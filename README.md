@@ -25,7 +25,7 @@ You will need a database to run this app as it will drop all Salesforce record f
         1. On the app management page, scroll down to the `Profiles` section and add the profiles that are allowed to access the app 
 
 #### Configuration Variables
-For this app to work, is requires the following configuration variables:
+This app requires the following configuration variables that you can either pass in via environment variables or by adding a `secrets.json` file with the variables included to the project:
 
 - `ConnectionStrings:default` - Default DB connection string
 - `Salesforce:ApiVersion` - Salesforce API version to use (default is 51.0)
