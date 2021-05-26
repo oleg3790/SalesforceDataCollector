@@ -31,7 +31,7 @@ For this app to work, is requires the following configuration variables:
 - `Salesforce:ApiVersion` - Salesforce API version to use (default is 51.0)
 - `Salesforce:ClientId` - Salesforce connected app client Id
 - `Salesforce:User` - Salesforce username
-- `Salesforce:CertPrivateKey` - Salesforce connected app OAuth certificate private key encoded as a base 64 string (you can use an online tool to base 64 encode the private key, or run `base64 <privatekey>` from a bash shell)
+- `Salesforce:AuthKey` - Salesforce connected app OAuth certificate private key encoded as a base 64 string (you can use an online tool to base 64 encode the private key, or run `base64 <privatekey>` from a bash shell)
 
 ## Initialize Database via Entity Framework
 All configuration to spin up a database is in `src/SalesforceDataCollector/Migrations`. When dealing with a new database, just run the `Update-Database` from the Package Manager Console to apply the migrations to a new database on your server.

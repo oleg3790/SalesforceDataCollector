@@ -125,7 +125,7 @@ namespace SalesforceDataCollector.Client
 
         private string GenerateAuthJWTToken()
         {
-            var base64PrivateKey = _config.GetValue<string>("Salesforce:CertPrivateKey");
+            var base64PrivateKey = _config.GetValue<string>("Salesforce:AuthKey");
 
             if (string.IsNullOrWhiteSpace(base64PrivateKey))
             {

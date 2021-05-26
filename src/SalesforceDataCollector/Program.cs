@@ -26,7 +26,7 @@ namespace SalesforceDataCollector
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    var dbConnection = hostContext.Configuration.GetConnectionString("default");
+                    var dbConnection = hostContext.Configuration.GetConnectionString("Default");
 
                     services.Configure<QuartzOptions>(hostContext.Configuration.GetSection("Quartz"))
                             .AddQuartz(q =>
