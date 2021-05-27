@@ -9,6 +9,8 @@ using SalesforceDataCollector.Models;
 using SalesforceDataCollector.Services;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +20,7 @@ namespace SalesforceDataCollector.Test
     public class AccountServiceFixture
     {
         [TestMethod]
-        public async void Adds_New_Accounts()
+        public async Task Adds_New_Accounts()
         {
             // Arrange
             var newAccounts = new List<Account>()
@@ -27,19 +29,29 @@ namespace SalesforceDataCollector.Test
                 new Account { Id = "3", AccountNumber = "Acct3", LastModifiedDate = DateTime.Now, Name = "Test 3", IsDeleted = true }
             };
 
-            var existingAccounts = new Mock<DbSet<AccountDataModel>>();
-            existingAccounts.As<IEnumerable<AccountDataModel>>().Setup(x => x).Returns(
-                new List<AccountDataModel>()
-                {
-                    new AccountDataModel { Id = "1", Created = DateTime.Now, AccountNumber = "Acct1", LastModified = DateTime.Now, Name = "Test", IsDeleted = false },
-                    new AccountDataModel { Id = "2", Created = DateTime.Now, AccountNumber = "Acct2", LastModified = DateTime.Now, Name = "Test 2", IsDeleted = false }
-                }
-            );
+            var existingAccounts = new List<AccountDataModel>()
+            {
+                new AccountDataModel { Id = "1", Created = DateTime.Now, AccountNumber = "Acct1", LastModified = DateTime.Now, Name = "Test", IsDeleted = false },
+                new AccountDataModel { Id = "2", Created = DateTime.Now, AccountNumber = "Acct2", LastModified = DateTime.Now, Name = "Test 2", IsDeleted = false }
+            }.AsQueryable();
+
+            var existingAccountsMock = new Mock<DbSet<AccountDataModel>>();
+            existingAccountsMock.As<IDbAsyncEnumerable<AccountDataModel>>()
+                .Setup(m => m.GetAsyncEnumerator())
+                .Returns(new TestDbAsyncEnumerator<AccountDataModel>(existingAccounts.GetEnumerator()));
+
+            existingAccountsMock.As<IQueryable<AccountDataModel>>()
+                .Setup(m => m.Provider)
+                .Returns(new TestDbAsyncQueryProvider<AccountDataModel>(existingAccounts.Provider));
+
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.Expression).Returns(existingAccounts.Expression);
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.ElementType).Returns(existingAccounts.ElementType);
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.GetEnumerator()).Returns(existingAccounts.GetEnumerator());
 
             var dbContextMock = new Mock<AccountContext>();
+            dbContextMock.Setup(c => c.Accounts).Returns(existingAccountsMock.Object);
             dbContextMock.Setup(c => c.AddRangeAsync(It.IsAny<IEnumerable<Account>>(), false)).Returns(Task.CompletedTask);
-            dbContextMock.SetupGet(c => c.Accounts).Returns(existingAccounts.Object);
-            dbContextMock.Setup(c => c.SaveChangesAsync(true, CancellationToken.None)).Returns(new Mock<Task<int>>().Object);
+            dbContextMock.Setup(c => c.SaveChangesAsync(true, CancellationToken.None)).Returns((Task<int>)null);
 
             var service = BuildService(dbContextMock);
 
