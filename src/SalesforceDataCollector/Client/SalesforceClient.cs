@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -20,7 +19,6 @@ using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using SalesforceDataCollector.Client.Models;
 using SalesforceDataCollector.Exceptions;
-using SalesforceDataCollector.Models;
 
 namespace SalesforceDataCollector.Client
 {
@@ -51,7 +49,7 @@ namespace SalesforceDataCollector.Client
 
         /// <inheritdoc/>
         public async Task<SalesforceDataResponse<T>> QueryData<T>(string query) =>
-            await GetData<T>($"/services/data/v{_apiVersion}/query?q={WebUtility.HtmlEncode(query)}");
+            await GetData<T>($"/services/data/v{_apiVersion}/query?q={WebUtility.UrlEncode(query)}");
 
         /// <inheritdoc/>
         public async Task<SalesforceDataResponse<T>> GetData<T>(string relativeUri)
