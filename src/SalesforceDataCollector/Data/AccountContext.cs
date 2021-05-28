@@ -5,7 +5,10 @@ namespace SalesforceDataCollector.Data
 {
     public class AccountContext : DbContext
     {
-        public DbSet<AccountDataModel> Accounts { get; set; }
+        public virtual DbSet<AccountDataModel> Accounts { get; set; }
+
+        public AccountContext()
+        { }
 
         public AccountContext(DbContextOptions<AccountContext> dbContextOptions)
             : base(dbContextOptions)
