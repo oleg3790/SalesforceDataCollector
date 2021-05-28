@@ -35,18 +35,7 @@ namespace SalesforceDataCollector.Test
                 new AccountDataModel { Id = "2", Created = DateTime.Now, AccountNumber = "Acct2", LastModified = DateTime.Now, Name = "Test 2", IsDeleted = false }
             }.AsQueryable();
 
-            var existingAccountsMock = new Mock<DbSet<AccountDataModel>>();
-            existingAccountsMock.As<IDbAsyncEnumerable<AccountDataModel>>()
-                .Setup(m => m.GetAsyncEnumerator())
-                .Returns(new TestDbAsyncEnumerator<AccountDataModel>(existingAccounts.GetEnumerator()));
-
-            existingAccountsMock.As<IQueryable<AccountDataModel>>()
-                .Setup(m => m.Provider)
-                .Returns(new TestDbAsyncQueryProvider<AccountDataModel>(existingAccounts.Provider));
-
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.Expression).Returns(existingAccounts.Expression);
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.ElementType).Returns(existingAccounts.ElementType);
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.GetEnumerator()).Returns(existingAccounts.GetEnumerator());
+            var existingAccountsMock = GetAccountDataSetMock(existingAccounts);
 
             var dbContextMock = new Mock<AccountContext>();
             dbContextMock.Setup(c => c.Accounts).Returns(existingAccountsMock.Object);
@@ -80,18 +69,7 @@ namespace SalesforceDataCollector.Test
                 new AccountDataModel { Id = "2", Created = DateTime.Now, AccountNumber = "Acct2", LastModified = syncDate, Name = "Test 2", IsDeleted = false }
             }.AsQueryable();
 
-            var existingAccountsMock = new Mock<DbSet<AccountDataModel>>();
-            existingAccountsMock.As<IDbAsyncEnumerable<AccountDataModel>>()
-                .Setup(m => m.GetAsyncEnumerator())
-                .Returns(new TestDbAsyncEnumerator<AccountDataModel>(existingAccounts.GetEnumerator()));
-
-            existingAccountsMock.As<IQueryable<AccountDataModel>>()
-                .Setup(m => m.Provider)
-                .Returns(new TestDbAsyncQueryProvider<AccountDataModel>(existingAccounts.Provider));
-
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.Expression).Returns(existingAccounts.Expression);
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.ElementType).Returns(existingAccounts.ElementType);
-            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.GetEnumerator()).Returns(existingAccounts.GetEnumerator());
+            var existingAccountsMock = GetAccountDataSetMock(existingAccounts);
 
             var dbContextMock = new Mock<AccountContext>();
             dbContextMock.Setup(c => c.Accounts).Returns(existingAccountsMock.Object);
@@ -105,6 +83,54 @@ namespace SalesforceDataCollector.Test
 
             // Assert
             acctsAdded.Should().Be(1);
+        }
+
+        [TestMethod]
+        public async Task Remove_Missing_Accounts()
+        {
+            // Arrange
+            var syncDate = DateTime.Now;
+
+            var newAccounts = new List<Account>();
+
+            var existingAccounts = new List<AccountDataModel>()
+            {
+                new AccountDataModel { Id = "1", Created = DateTime.Now, AccountNumber = "Acct1", LastModified = syncDate, Name = "Test", IsDeleted = false },
+                new AccountDataModel { Id = "2", Created = DateTime.Now, AccountNumber = "Acct2", LastModified = syncDate, Name = "Test 2", IsDeleted = false }
+            }.AsQueryable();
+
+            var existingAccountsMock = GetAccountDataSetMock(existingAccounts);
+
+            var dbContextMock = new Mock<AccountContext>();
+            dbContextMock.Setup(c => c.Accounts).Returns(existingAccountsMock.Object);
+            dbContextMock.Setup(c => c.RemoveRange(It.IsAny<object>()));
+            dbContextMock.Setup(c => c.SaveChangesAsync(true, CancellationToken.None)).Returns((Task<int>)null);
+
+            var service = BuildService(dbContextMock);
+
+            // Act
+            var acctsAdded = await service.RemoveMissingAccountsAsync(newAccounts);
+
+            // Assert
+            acctsAdded.Should().Be(2);
+        }
+
+        private Mock<DbSet<AccountDataModel>> GetAccountDataSetMock(IQueryable<AccountDataModel> accounts)
+        {
+            var existingAccountsMock = new Mock<DbSet<AccountDataModel>>();
+            existingAccountsMock.As<IDbAsyncEnumerable<AccountDataModel>>()
+                .Setup(m => m.GetAsyncEnumerator())
+                .Returns(new TestDbAsyncEnumerator<AccountDataModel>(accounts.GetEnumerator()));
+
+            existingAccountsMock.As<IQueryable<AccountDataModel>>()
+                .Setup(m => m.Provider)
+                .Returns(new TestDbAsyncQueryProvider<AccountDataModel>(accounts.Provider));
+
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.Expression).Returns(accounts.Expression);
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.ElementType).Returns(accounts.ElementType);
+            existingAccountsMock.As<IQueryable<AccountDataModel>>().Setup(m => m.GetEnumerator()).Returns(accounts.GetEnumerator());
+
+            return existingAccountsMock;
         }
 
         private AccountService BuildService(Mock<AccountContext> dbContextMock)
